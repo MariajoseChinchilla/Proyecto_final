@@ -3,11 +3,11 @@ from PIL import Image, ImageDraw, ImageFont
 import math as m
 import os
 import shutil
+import tweepy
 
 import  gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-from gi.repository import GdkPixbuf     #nos servira para tener informacion de la imagen, pixeles, etc
 
 import webbrowser
 
@@ -15,23 +15,20 @@ class ArteAscii(Gtk.Window):
     #colocar como variable de clase para tener acceso a el en los metodos
     grid = Gtk.Grid()
     vbox=Gtk.VBox()
-    box_corrimiento_vertical = Gtk.VBox()
-    box_corrimiento_horizontal = Gtk.HBox()
-    box_imagen_normal = Gtk.VBox()
-    box_arte_ascii = Gtk.VBox()
+    img = Gtk.Image()
+    im_ascii = Gtk.Image()
     text_buffer = Gtk.TextBuffer()
     display_para_buffer = Gtk.TextView(buffer=text_buffer)
     label_normal = Gtk.Label('IMAGEN NORMAL')
     label_arte_ascii = Gtk.Label('IMAGEN EN ARTE ASCII')
     contador_guardadas = 0      #para llevar una numeracion al guardar
-
-    #atributo de clase para pasar a ascii
-    carac = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~i!lI;:,\"^`".'
-    caracteres = [i for i in carac]
+    size = 600,600
+    label_espaciador = Gtk.Label('          ')      #para tener espacio entre la imagen y arte ascii
+    label_espaciador_final = Gtk.Label('           ')
 
     def __init__(self):
         super(ArteAscii, self).__init__(title = 'Arte ASCII')
-        self.set_default_size(1700,850)
+        self.set_default_size(1500,850)
         self.set_resizable(False)   #fijar el size de la ventana
 
     #contenedores
@@ -40,10 +37,7 @@ class ArteAscii(Gtk.Window):
         self.grid.set_column_spacing(1)
         self.grid.set_row_spacing(1)
         self.vbox.pack_start(self.grid, True, True, 0)
-        self.grid.attach(self.box_corrimiento_vertical, 400, 1, 1,1)
-        self.grid.attach(self.box_corrimiento_horizontal, 3, 142 ,500,1)
-        self.grid.attach(self.box_imagen_normal, 0, 150, 600,600)
-        self.grid.attach(self.box_arte_ascii, 450, 150, 600, 600)
+
     #desarrollo del menu con opciones pedidas para el proyecto
 
         menu_bar = Gtk.MenuBar()
@@ -124,11 +118,18 @@ class ArteAscii(Gtk.Window):
     #textbuffer, este dejara un mensaje cuando se haya cargado una imagen
     #tambien servira para pasarle la informacion al boton de guardado para que se habilite o no
         self.display_para_buffer.set_size_request(30, 30)
-        self.grid.attach(self.display_para_buffer, 1, 20, 5, 5)
+        self.grid.attach(self.display_para_buffer, 150, 100, 1, 1)
 
     #label de imagen normal y con arte ascii
-        self.grid.attach(self.label_normal, 10, 140, 1, 2)
-        self.grid.attach(self.label_arte_ascii, 800, 140, 1, 2)
+        self.grid.attach(self.label_normal, 10, 200, 1, 2)
+        self.grid.attach(self.label_arte_ascii, 200, 200, 1, 2)
+
+    #parte para cargar la imagen
+        self.grid.attach_next_to(self.img, self.label_normal, Gtk.PositionType.BOTTOM, 1, 1)
+        self.grid.attach_next_to(self.label_espaciador, self.img, Gtk.PositionType.RIGHT, 5, 1)
+        self.grid.attach_next_to(self.im_ascii, self.label_arte_ascii, Gtk.PositionType.BOTTOM, 1,1)
+        self.grid.attach_next_to(self.label_espaciador_final, self.im_ascii, Gtk.PositionType.RIGHT, 5, 1)
+
 
     #configuracion metodo
     def config_imagen(self, widget):
@@ -162,23 +163,22 @@ class ArteAscii(Gtk.Window):
             self.text_buffer.set_text('   {} ha sido cargado.'.format(texto_para_buffer))
     #ademas de decir en el buffer que hemos cargado la imagen, debemos cargar la imagen del lado izquierdo del window
     #al lado derecho aparecera la imagen en arte ascii, pero antes, debera mostrarse un dialogo para opciones de imagen
-            imagen_cargada = GdkPixbuf.Pixbuf.new_from_file_at_size(str(cadena_nombre_archivo), 600,600)
-            imagen_gtk = Gtk.Image()
-            imagen_gtk.set_from_pixbuf(imagen_cargada)
-            self.box_imagen_normal.remove(imagen_gtk)
-            self.box_imagen_normal.pack_start(imagen_gtk, False, False, 0)
+            ascii_pil = Image.open(cadena_nombre_archivo, 'r')
+            ascii_pil.thumbnail(self.size)
+            ascii_pil.save('NormalParaMostrar.png')
+            self.img.set_from_file(os.path.abspath('NormalParaMostrar.png'))  # para ajustar el tamano
 
     #cargar el arte ascii a la par con las configuraciones que estan hasta el momento
     #el usuario podria cambiar esto si le da en el boton de execute dle tool bar
             if os.path.exists(os.path.abspath('ImEnAscii.png')):
                 os.remove('ImEnAscii.png')      #para no cargar otro archivo
-            self.final_ascii(cadena_nombre_archivo)
-            im_cargada_ascii = GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.abspath('ImEnAscii.png'), 600, 600)
-            imagen_gtk_ascii = Gtk.Image()
-            imagen_gtk_ascii.set_from_pixbuf(im_cargada_ascii)
-            self.box_arte_ascii.remove(imagen_gtk_ascii)
-            self.box_arte_ascii.pack_start(imagen_gtk_ascii, False, False, 0)
-
+                os.remove('AsciiParaMostrar.png')
+            letras = str(VentanaConfiguraciones.caracteres)
+            self.final_ascii(cadena_nombre_archivo, letras)
+            ascii_pil = Image.open(os.path.abspath('ImEnAscii.png'), 'r')
+            ascii_pil.thumbnail(self.size)
+            ascii_pil.save('AsciiParaMostrar.png')
+            self.im_ascii.set_from_file(os.path.abspath('AsciiParaMostrar.png'))     #para ajustar el tamano
             self.show_all()
 
         elif respuesta == Gtk.ResponseType.CANCEL:
@@ -244,24 +244,24 @@ class ArteAscii(Gtk.Window):
         # convertir a escalas grises
         return imagen.convert('L')
 
-    def pix_en_ascii(self, imagen):
-        rango = m.ceil(255 / len(self.caracteres))
+    def pix_en_ascii(self, imagen, caracteres):
+        rango = m.ceil(255 / len(caracteres))
         # elegir el mejor caracter para representar el pixel
         # el brillo esta entre 0 y 250, entonces se distribuye esto en la cantidad
         # total de caracteres
         # escoje en la lista de caracteres dependiendo del grupo de pixeles
         img = list(imagen.getdata())
-        pixels_ascii = [self.caracteres[m.floor(pixel / rango)] for pixel in
+        pixels_ascii = [caracteres[m.floor(pixel / rango)] for pixel in
                         img]
 
         return ''.join(pixels_ascii)
 
-    def pasar_a_ascii(self, imagen):
+    def pasar_a_ascii(self, imagen, caracteres):
         # pasar los caraceres elegidos a imagen
         imagen, alt = self.dimensiones(imagen)
         imagen = self.escala_grises(imagen)
 
-        caracteres = self.pix_en_ascii(imagen)
+        caracteres = self.pix_en_ascii(imagen, caracteres)
 
         # Crea la imagen y el archivo .txt con el asciiArt
         fnt = ImageFont.load_default()
@@ -279,13 +279,17 @@ class ArteAscii(Gtk.Window):
 
         return "\n".join(imageAscii)
 
-    def final_ascii(self, ruta):
+    def final_ascii(self, ruta, caracteres):
         image = Image.open(ruta)
-        self.pasar_a_ascii(image)
+        self.pasar_a_ascii(image, str(VentanaConfiguraciones.caracteres))
 
+
+#clase para configuraciones
 class VentanaConfiguraciones(Gtk.Window):       #ventana que se va a abrir para las configuraciones de la imagen
     #los datos que el usuario ingresaran como atributos de clase para ser accedidos luego en la otra clase
     box = Gtk.VBox()
+    invertir = False
+    caracteres = '$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\^'
     def __init__(self):
         super(VentanaConfiguraciones, self).__init__(title = 'Configuraciones')
         self.set_default_size(420,420)
@@ -294,10 +298,8 @@ class VentanaConfiguraciones(Gtk.Window):       #ventana que se va a abrir para 
         self.add(self.box)
     #demas detalles de la ventana
         label_titulo = Gtk.Label('CONFIGURACIONES PARA EL ARTE ASCII')
-        num_filas = Gtk.Entry()
-        label_num_filas = Gtk.Label('Ingrese el número de filas')
-        num_columnas = Gtk.Entry()
-        label_num_columnas = Gtk.Label('Ingrese el número de columnas')
+        caracteres_entrada = Gtk.Entry()
+        caracteres_label = Gtk.Label('Ingrese sus caractéres ASCII')
         label_invertir_imagen = Gtk.Label('¿Invertir imagen?')
         radio_boton_si = Gtk.RadioButton.new_with_label_from_widget(None, 'Sí')
         radio_boton_si.connect('toggled', self.si_invertir)
@@ -310,16 +312,14 @@ class VentanaConfiguraciones(Gtk.Window):       #ventana que se va a abrir para 
         radio_boton_si.set_valign(Gtk.PositionType.RIGHT)
         radio_boton_no.set_valign(Gtk.PositionType.RIGHT)
     #configuraciones de formato para las entradas
-        num_filas.set_halign(Gtk.PositionType.BOTTOM)
-        num_columnas.set_halign(Gtk.PositionType.BOTTOM)
-        num_filas.set_valign(Gtk.PositionType.RIGHT)
-        num_columnas.set_valign(Gtk.PositionType.RIGHT)
+        caracteres_label.set_halign(Gtk.PositionType.BOTTOM)
+        caracteres_entrada.set_halign(Gtk.PositionType.BOTTOM)
+        caracteres_label.set_valign(Gtk.PositionType.RIGHT)
+        caracteres_entrada.set_valign(Gtk.PositionType.RIGHT)
     #poner en el box
         self.box.pack_start(label_titulo, False, False, 40)
-        self.box.pack_start(label_num_filas, False, False, 15)
-        self.box.pack_start(num_filas, False, False, 0)
-        self.box.pack_start(label_num_columnas, False, False, 15)
-        self.box.pack_start(num_columnas, False, False, 0)
+        self.box.pack_start(caracteres_label, False, False, 15)
+        self.box.pack_start(caracteres_entrada, False, False, 0)
         self.box.pack_start(label_invertir_imagen, False, False, 15)
         self.box.pack_start(radio_boton_si, False, False, 0)
         self.box.pack_start(radio_boton_no, True, True, 0)
@@ -327,9 +327,9 @@ class VentanaConfiguraciones(Gtk.Window):       #ventana que se va a abrir para 
 
     #acciones de los radio botones
     def si_invertir(self, widget):
-        pass
+        self.invertir = True
     def no_invertir(self, widget):
-        pass
+        self.invertir = False
 
 #esta es la clase del dialogo que avisa que un archivo ha sido guardado
 class DialogoGuardado(Gtk.Dialog):
@@ -359,6 +359,9 @@ class NoHayArchivoCargado(Gtk.Dialog):
         area.add(Gtk.Label('Ninguna imagen ha sido cargada.'))
         self.show_all()
 
+class VentanaTwitter(Gtk.Window):
+    def __init__(self):
+        Gtk.Window.__init__(self, 'Credenciales de Twitter')
 
 win = ArteAscii()
 win.connect('destroy', Gtk.main_quit)
