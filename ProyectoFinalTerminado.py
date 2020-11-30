@@ -236,14 +236,6 @@ class ArteAscii(Gtk.Box):
             self.text_buffer.set_text('   {} ha sido cargado.'.format(texto_para_buffer))
     #ademas de decir en el buffer que hemos cargado la imagen, debemos cargar la imagen del lado izquierdo del window
     #al lado derecho aparecera la imagen en arte ascii, pero antes, debera mostrarse un dialogo para opciones de imagen
-            if self.invertir == False:
-                letras = self.entrada_caracteres.get_text()
-            elif self.invertir == True:
-                letras = str(self.entrada_caracteres.get_text)[::-1]    #para invertir la imagen
-
-            if len(letras) == 0:
-                self.__parent.set_current_page(7)
-
             ascii_pil = Image.open(cadena_nombre_archivo, 'r')
             ascii_pil.thumbnail(self.size)
             ascii_pil.save('NormalParaMostrar.png')
@@ -253,8 +245,15 @@ class ArteAscii(Gtk.Box):
             if os.path.exists(os.path.abspath('ImEnAscii.png')):
                 os.remove('ImEnAscii.png')      #para no cargar otro archivo
                 os.remove('AsciiParaMostrar.png')
+            if self.invertir == False:
+                letras = self.entrada_caracteres.get_text()
+            elif self.invertir == True:
+                letras = str(self.entrada_caracteres.get_text)[::-1]    #para invertir la imagen
 
-            elif len(letras) > 0:
+            if len(letras) == 0:
+                self.__parent.set_current_page(7)
+
+            if len(letras) > 0:
                 self.final_ascii(cadena_nombre_archivo, letras)     #pasar a ascii
                 ascii_pil = Image.open(os.path.abspath('ImEnAscii.png'), 'r')
                 ascii_pil.thumbnail(self.size)
