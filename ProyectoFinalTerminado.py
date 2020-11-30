@@ -298,14 +298,14 @@ class ArteAscii(Gtk.Box):
         acerca_de_dialogo.set_authors('MCM')
         acerca_de_dialogo.set_copyright('Desarrollo de interfaz gráfica en Gtk 3.0')
         acerca_de_dialogo.set_comments('Uso de Gtk 3.0, Tweepy y librerías estándar de Python 3.')        #agregar lo que me falta depues de hacer el proyecto
-        acerca_de_dialogo.set_website('https://github.com/MariajoseChinchilla/Proyecto_final/blob/master/Proyecto.py')
+        acerca_de_dialogo.set_website('https://github.com/MariajoseChinchilla/Proyecto_final/blob/master/ProyectoFinalTerminado.py')
         vbox.pack_start(acerca_de_dialogo, False, False, 0)
         self.add(vbox)
         acerca_de_dialogo.run()
         acerca_de_dialogo.destroy()
 
     def codigo_fuente_accion(self, widget):
-        webbrowser.open_new_tab('https://github.com/MariajoseChinchilla/Proyecto_final/blob/master/Proyecto.py')
+        webbrowser.open_new_tab('https://github.com/MariajoseChinchilla/Proyecto_final/blob/master/ProyectoFinalTerminado.py')
 
 #ACA EMPIEZA TODA LA PARTE DE PASAR UNA IMAGEN A ARTE ASCII
     #varias metodos para eso definidos aca
